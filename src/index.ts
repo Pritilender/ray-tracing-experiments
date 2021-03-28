@@ -1,4 +1,5 @@
 import { writeFile } from "fs/promises"
+import { Color } from "./vec3/color"
 
 const main = async () => {
   const imageWidth = 256
@@ -9,19 +10,17 @@ const main = async () => {
   for (let j = imageHeight - 1; j >= 0; j--) {
     console.info(`\rScanlines remaining: ${j}`)
     for (let i = 0; i < imageWidth; i++) {
-      const r = i / (imageWidth - 1)
-      const g = j / (imageHeight - 1)
-      const b = 0.25
+      const color = new Color(
+        i / (imageWidth - 1),
+        j / (imageHeight - 1),
+        0.25
+      )
 
-      const ir = (255 * r) | 0
-      const ig = (255 * g) | 0
-      const ib = (255 * b) | 0
-
-      fileContent += `${ir} ${ig} ${ib}\n`
+      fileContent += color
     }
   }
 
-  await writeFile("img/out.ppm", fileContent)
+  await writeFile("img/out1.ppm", fileContent)
   console.info("\nDone.\n")
 }
 
