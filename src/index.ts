@@ -1,40 +1,28 @@
 import { writeFile } from "fs/promises"
+import { Hittable } from "./objects/hittable"
+import { HittableList } from "./objects/hittable-list"
+import { Sphere } from "./objects/sphere"
 import { Ray } from "./ray"
 import { Color } from "./vec3/color"
 import { Point3 } from "./vec3/point3"
 import { Vec3 } from "./vec3/vec3"
 
-const rayColor = (ray: Ray): Color => {
-  let t = hitSphere(new Point3(0, 0, -1), 0.5, ray)
-
-  if (t > 0) {
-    const n: Vec3 = ray.at(t).subtractVector(new Vec3(0, 0, -1)).unitVector()
+const rayColor = (ray: Ray, world: Hittable): Color => {
+  const result = world.hit(ray, 0, Number.MAX_SAFE_INTEGER)
+  if (result) {
+    const n = result.normal
     const baseColor: Color = (new Color(n.x + 1, n.y + 1, n.z + 1)).multiplyByScalar(0.5)
 
     return new Color(baseColor.x, baseColor.y, baseColor.z)
   }
 
   const unitDirection: Vec3 = ray.direction.unitVector()
-  t = 0.5 * (unitDirection.y + 1)
+  const t = 0.5 * (unitDirection.y + 1)
   const white: Color = new Color(1, 1, 1)
   const blue: Color = new Color(0.5, 0.7, 1)
   // Operations return new Vec3 objects, which breaks the inheritance. Fix this!
   const vec: Vec3 = white.multiplyByScalar(1 - t).addVector(blue.multiplyByScalar(t))
   return new Color(vec.x, vec.y, vec.z)
-}
-
-const hitSphere = (center: Point3, radius: number, ray: Ray): number => {
-  const oc: Vec3 = ray.origin.subtractVector(center)
-  const a: number = ray.direction.lengthSquared()
-  const halfB: number = oc.dotProduct(ray.direction)
-  const c: number = oc.lengthSquared() - radius * radius
-  const discriminant = halfB * halfB - a * c
-
-  if (discriminant < 0) {
-    return -1
-  } else {
-    return (-halfB - Math.sqrt(discriminant)) / a
-  }
 }
 
 const main = async () => {
@@ -54,6 +42,11 @@ const main = async () => {
   const vertical = new Vec3(0, viewportHeight, 0)
   const lowerLeftCorner = origin.subtractVector(horizontal.divideByScalar(2)).subtractVector(vertical.divideByScalar(2)).subtractVector(new Vec3(0, 0, focalLength))
 
+  // World
+  const world: HittableList = new HittableList()
+  world.add(new Sphere(new Point3(0, 0, -1), 0.5))
+  world.add(new Sphere(new Point3(0, -100.5, -1), 100))
+
   // Rendering
   let fileContent = `P3\n${imageWidth} ${imageHeight}\n255\n`
 
@@ -65,7 +58,7 @@ const main = async () => {
 
       const rayDirection: Vec3 = lowerLeftCorner.addVector(horizontal.multiplyByScalar(u)).addVector(vertical.multiplyByScalar(v)).subtractVector(origin)
       const ray: Ray = new Ray(origin, rayDirection)
-      const color: Color = rayColor(ray)
+      const color: Color = rayColor(ray, world)
 
       fileContent += color
     }
