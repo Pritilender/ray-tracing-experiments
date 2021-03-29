@@ -5,6 +5,10 @@ import { Point3 } from "./vec3/point3"
 import { Vec3 } from "./vec3/vec3"
 
 const rayColor = (ray: Ray): Color => {
+  if (hitSphere(new Point3(0, 0, -1), 0.5, ray)) {
+    return new Color(1, 0, 0)
+  }
+
   const unitDirection: Vec3 = ray.direction.unitVector()
   const t = 0.5 * (unitDirection.y + 1)
   const white: Color = new Color(1, 1, 1)
@@ -12,6 +16,15 @@ const rayColor = (ray: Ray): Color => {
   // Operations return new Vec3 objects, which breaks the inheritance. Fix this!
   const vec: Vec3 = white.multiplyByScalar(1 - t).addVector(blue.multiplyByScalar(t))
   return new Color(vec.x, vec.y, vec.z)
+}
+
+const hitSphere = (center: Point3, radius: number, ray: Ray): boolean => {
+  const oc: Vec3 = ray.origin.subtractVector(center)
+  const a: number = ray.direction.dotProduct(ray.direction)
+  const b: number = 2 * oc.dotProduct(ray.direction)
+  const c: number = oc.dotProduct(oc) - radius ** 2
+  const discriminant = b * b - 4 * a * c
+  return discriminant > 0
 }
 
 const main = async () => {
@@ -31,7 +44,6 @@ const main = async () => {
   const vertical = new Vec3(0, viewportHeight, 0)
   const lowerLeftCorner = origin.subtractVector(horizontal.divideByScalar(2)).subtractVector(vertical.divideByScalar(2)).subtractVector(new Vec3(0, 0, focalLength))
 
-  console.log(lowerLeftCorner)
   // Rendering
   let fileContent = `P3\n${imageWidth} ${imageHeight}\n255\n`
 
