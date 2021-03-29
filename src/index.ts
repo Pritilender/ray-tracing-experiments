@@ -1,4 +1,5 @@
 import { writeFile } from "fs/promises"
+import { Camera } from "./camera"
 import { Hittable } from "./objects/hittable"
 import { HittableList } from "./objects/hittable-list"
 import { Sphere } from "./objects/sphere"
@@ -11,7 +12,7 @@ const rayColor = (ray: Ray, world: Hittable): Color => {
   const result = world.hit(ray, 0, Number.MAX_SAFE_INTEGER)
   if (result) {
     const n = result.normal
-    const baseColor: Color = (new Color(n.x + 1, n.y + 1, n.z + 1)).multiplyByScalar(0.5)
+    const baseColor: Vec3 = (new Color(n.x + 1, n.y + 1, n.z + 1)).multiplyByScalar(0.5)
 
     return new Color(baseColor.x, baseColor.y, baseColor.z)
   }
@@ -31,16 +32,10 @@ const main = async () => {
   const aspectRatio = 16 / 9
   const imageWidth = 400
   const imageHeight = (imageWidth / aspectRatio) | 0
+  const samplesPerPixel = 100
 
   // Camera configuration
-  const viewportHeight = 2
-  const viewportWidth = aspectRatio * viewportHeight
-  const focalLength = 1
-
-  const origin = new Point3(0, 0, 0)
-  const horizontal = new Vec3(viewportWidth, 0, 0)
-  const vertical = new Vec3(0, viewportHeight, 0)
-  const lowerLeftCorner = origin.subtractVector(horizontal.divideByScalar(2)).subtractVector(vertical.divideByScalar(2)).subtractVector(new Vec3(0, 0, focalLength))
+  const camera = new Camera()
 
   // World
   const world: HittableList = new HittableList()
@@ -53,14 +48,14 @@ const main = async () => {
   for (let j = imageHeight - 1; j >= 0; j--) {
     console.info(`\rScanlines remaining: ${j}`)
     for (let i = 0; i < imageWidth; i++) {
-      const u = i / (imageWidth - 1)
-      const v = j / (imageHeight - 1)
-
-      const rayDirection: Vec3 = lowerLeftCorner.addVector(horizontal.multiplyByScalar(u)).addVector(vertical.multiplyByScalar(v)).subtractVector(origin)
-      const ray: Ray = new Ray(origin, rayDirection)
-      const color: Color = rayColor(ray, world)
-
-      fileContent += color
+      let color = new Color(0, 0, 0)
+      for (let s = 0; s < samplesPerPixel; s++) {
+        const u = (i + Math.random()) / (imageWidth - 1)
+        const v = (j + Math.random()) / (imageHeight - 1)
+        const ray = camera.getRay(u, v)
+        color = color.addVector(rayColor(ray, world))
+      }
+      fileContent += color.write(samplesPerPixel)
     }
   }
 
