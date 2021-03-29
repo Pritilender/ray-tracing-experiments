@@ -2,6 +2,8 @@ import { writeFile } from "fs/promises"
 import { Color } from "./vec3/color"
 
 const main = async () => {
+  const filename: string = process.argv[2] || `${Date.now()}.ppm`
+
   const imageWidth = 256
   const imageHeight = 256
 
@@ -20,7 +22,7 @@ const main = async () => {
     }
   }
 
-  await writeFile("img/out1.ppm", fileContent)
+  await writeFile(`img/${filename}`, fileContent)
   console.info("\nDone.\n")
 }
 
