@@ -1,3 +1,4 @@
+import { clamp } from "../utils"
 import { Vec3 } from "./vec3"
 
 export class Color extends Vec3 {
@@ -11,9 +12,13 @@ export class Color extends Vec3 {
 
   write(samplesPerPixel: number): string {
     const scale = 1 / samplesPerPixel
-    const r = (256 * this.clamp(this.x * scale, 0, 0.999)) | 0
-    const g = (256 * this.clamp(this.y * scale, 0, 0.999)) | 0
-    const b = (256 * this.clamp(this.z * scale, 0, 0.999)) | 0
+    let r = Math.sqrt(scale * this.x)
+    let g = Math.sqrt(scale * this.y)
+    let b = Math.sqrt(scale * this.z)
+
+    r = (256 * clamp(r, 0, 0.999)) | 0
+    g = (256 * clamp(g, 0, 0.999)) | 0
+    b = (256 * clamp(b, 0, 0.999)) | 0
 
     return `${r} ${g} ${b}\n`
   }
@@ -21,16 +26,5 @@ export class Color extends Vec3 {
   addVector(color: Color): Color {
     const vecColor = super.addVector(color)
     return new Color(vecColor.x, vecColor.y, vecColor.z)
-  }
-
-  // TODO: This should be in some util
-  private clamp(x: number, min: number, max: number): number {
-    if (x < min) {
-      return min
-    } else if (x > max) {
-      return max
-    } else {
-      return x
-    }
   }
 }

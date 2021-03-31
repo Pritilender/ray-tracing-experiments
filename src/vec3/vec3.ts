@@ -1,4 +1,20 @@
+import { randomInRange } from "../utils"
+
 export class Vec3 {
+  static random(min: number, max: number): Vec3 {
+    return new Vec3(randomInRange(min, max), randomInRange(min, max), randomInRange(min, max))
+  }
+
+  static randomInUnitSphere(): Vec3 {
+    let p: Vec3
+
+    do {
+      p = this.random(-1, 1)
+    } while (p.lengthSquared() >= 1)
+
+    return p
+  }
+
   public e: number[]
 
   constructor(e0: number, e1: number, e2: number) {

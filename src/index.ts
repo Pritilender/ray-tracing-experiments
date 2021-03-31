@@ -8,13 +8,22 @@ import { Color } from "./vec3/color"
 import { Point3 } from "./vec3/point3"
 import { Vec3 } from "./vec3/vec3"
 
-const rayColor = (ray: Ray, world: Hittable): Color => {
-  const result = world.hit(ray, 0, Number.MAX_SAFE_INTEGER)
-  if (result) {
-    const n = result.normal
-    const baseColor: Vec3 = (new Color(n.x + 1, n.y + 1, n.z + 1)).multiplyByScalar(0.5)
+const rayColor = (ray: Ray, world: Hittable, depth: number): Color => {
+  if (depth <= 0) {
+    return new Color(0, 0, 0)
+  }
 
-    return new Color(baseColor.x, baseColor.y, baseColor.z)
+  const result = world.hit(ray, 0.001, Number.MAX_SAFE_INTEGER)
+
+  if (result) {
+    const target = result.point.addVector(result.normal).addVector(Vec3.randomInUnitSphere())
+    const baseColorAsVec3: Vec3 = rayColor(
+      new Ray(result.point, target.subtractVector(result.point)),
+      world,
+      depth - 1
+    ).multiplyByScalar(0.5)
+
+    return new Color(baseColorAsVec3.x, baseColorAsVec3.y, baseColorAsVec3.z)
   }
 
   const unitDirection: Vec3 = ray.direction.unitVector()
@@ -33,6 +42,7 @@ const main = async () => {
   const imageWidth = 400
   const imageHeight = (imageWidth / aspectRatio) | 0
   const samplesPerPixel = 100
+  const maxDepth = 50
 
   // Camera configuration
   const camera = new Camera()
@@ -53,7 +63,7 @@ const main = async () => {
         const u = (i + Math.random()) / (imageWidth - 1)
         const v = (j + Math.random()) / (imageHeight - 1)
         const ray = camera.getRay(u, v)
-        color = color.addVector(rayColor(ray, world))
+        color = color.addVector(rayColor(ray, world, maxDepth))
       }
       fileContent += color.write(samplesPerPixel)
     }
