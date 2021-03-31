@@ -15,6 +15,15 @@ export class Vec3 {
     return p
   }
 
+  static randomInHemisphere(normal: Vec3): Vec3 {
+    const inUnitSphere = this.randomInUnitSphere()
+    if (inUnitSphere.dotProduct(normal) > 0) {
+      return inUnitSphere
+    } else {
+      return inUnitSphere.multiplyByScalar(-1)
+    }
+  }
+
   static randomUnitVector(): Vec3 {
     return this.randomInUnitSphere().unitVector()
   }

@@ -16,7 +16,7 @@ const rayColor = (ray: Ray, world: Hittable, depth: number): Color => {
   const result = world.hit(ray, 0.001, Number.MAX_SAFE_INTEGER)
 
   if (result) {
-    const target = result.point.addVector(result.normal).addVector(Vec3.randomUnitVector())
+    const target = result.point.addVector(result.normal).addVector(Vec3.randomInHemisphere(result.normal))
     const baseColorAsVec3: Vec3 = rayColor(
       new Ray(result.point, target.subtractVector(result.point)),
       world,
