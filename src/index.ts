@@ -1,5 +1,8 @@
 import { writeFile } from "fs/promises"
 import { Camera } from "./camera"
+import { Lambertian } from "./materials/lambertian"
+import { Metal } from "./materials/metal"
+import { Material, ScatterResult } from "./materials/material"
 import { Hittable } from "./objects/hittable"
 import { HittableList } from "./objects/hittable-list"
 import { Sphere } from "./objects/sphere"
@@ -16,14 +19,14 @@ const rayColor = (ray: Ray, world: Hittable, depth: number): Color => {
   const result = world.hit(ray, 0.001, Number.MAX_SAFE_INTEGER)
 
   if (result) {
-    const target = result.point.addVector(result.normal).addVector(Vec3.randomInHemisphere(result.normal))
-    const baseColorAsVec3: Vec3 = rayColor(
-      new Ray(result.point, target.subtractVector(result.point)),
-      world,
-      depth - 1
-    ).multiplyByScalar(0.5)
+    const scatterResult: ScatterResult = result.material.scatter(ray, result)
 
-    return new Color(baseColorAsVec3.x, baseColorAsVec3.y, baseColorAsVec3.z)
+    if (scatterResult.isScattered) {
+      const baseColorAsVec3: Vec3 = rayColor(scatterResult.scattered, world, depth - 1).multiplyByVector(scatterResult.attenuation)
+      return new Color(baseColorAsVec3.x, baseColorAsVec3.y, baseColorAsVec3.z)
+    }
+
+    return new Color(0, 0, 0)
   }
 
   const unitDirection: Vec3 = ray.direction.unitVector()
@@ -49,8 +52,16 @@ const main = async () => {
 
   // World
   const world: HittableList = new HittableList()
-  world.add(new Sphere(new Point3(0, 0, -1), 0.5))
-  world.add(new Sphere(new Point3(0, -100.5, -1), 100))
+
+  const ground: Material = new Lambertian(new Color(0.8, 0.8, 0))
+  const center: Material = new Lambertian(new Color(0.7, 0.3, 0.3))
+  const left: Material = new Metal(new Color(0.8, 0.8, 0.8), 0.3)
+  const right: Material = new Metal(new Color(0.8, 0.6, 0.2), 1)
+
+  world.add(new Sphere(new Point3(0, -100.5, -1), 100, ground))
+  world.add(new Sphere(new Point3(0, 0, -1), 0.5, center))
+  world.add(new Sphere(new Point3(-1, 0, -1), 0.5, left))
+  world.add(new Sphere(new Point3(1, 0, -1), 0.5, right))
 
   // Rendering
   let fileContent = `P3\n${imageWidth} ${imageHeight}\n255\n`

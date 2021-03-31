@@ -46,6 +46,15 @@ export class Vec3 {
     return this.e[2]
   }
 
+  isNearZero(): boolean {
+    const s = 1e-8
+    return this.e.every(x => Math.abs(x) < s)
+  }
+
+  reflect(centerVector: Vec3): Vec3 {
+    return this.subtractVector(centerVector.multiplyByScalar(2 * this.dotProduct(centerVector)))
+  }
+
   addVector(rhs: Vec3): Vec3 {
     return new Vec3(this.e[0] + rhs.e[0], this.e[1] + rhs.e[1], this.e[2] + rhs.e[2])
   }

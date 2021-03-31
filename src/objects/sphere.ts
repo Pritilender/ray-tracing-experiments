@@ -1,10 +1,11 @@
+import { Material } from "../materials/material"
 import { Ray } from "../ray"
 import { Point3 } from "../vec3/point3"
 import { Vec3 } from "../vec3/vec3"
 import { HitResult, Hittable } from "./hittable"
 
 export class Sphere implements Hittable {
-  constructor(public center: Point3, public radius: number) { }
+  constructor(public center: Point3, public radius: number, public material: Material) { }
 
   hit(ray: Ray, tMin: number, tMax: number): HitResult | null {
     const oc: Vec3 = ray.origin.subtractVector(this.center)
@@ -33,6 +34,7 @@ export class Sphere implements Hittable {
       root,
       rayAtRoot.subtractVector(this.center).divideByScalar(this.radius),
       ray,
+      this.material,
     )
   }
 }
