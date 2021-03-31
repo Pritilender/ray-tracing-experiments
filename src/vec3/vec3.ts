@@ -15,6 +15,10 @@ export class Vec3 {
     return p
   }
 
+  static randomUnitVector(): Vec3 {
+    return this.randomInUnitSphere().unitVector()
+  }
+
   public e: number[]
 
   constructor(e0: number, e1: number, e2: number) {
